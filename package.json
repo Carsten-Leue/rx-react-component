@@ -1,0 +1,44 @@
+{
+  "name": "prod-request-rxjs",
+  "version": "0.0.1",
+  "private": false,
+  "description": "Service lookup helper via Consul",
+  "keywords": [],
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:Carsten-Leue/rx-react-component.git"
+  },
+  "license": "SEE LICENSE IN LICENSE.md",
+  "author": {
+    "name": "Carsten Leue",
+    "email": "carsten.leue+github@gmail.com"
+  },
+  "sideEffects": false,
+  "scripts": {
+    "build": "ng-packagr -p package.json"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@angular/compiler": "^8.2.8",
+    "@angular/compiler-cli": "^8.2.8",
+    "@angular/core": "^8.2.8",
+    "@types/react": "^16.9.3",
+    "ng-packagr": "^5.5.1",
+    "react": "^16.10.1",
+    "rxjs": "^6.4.0",
+    "tslib": "^1.10.0",
+    "typescript": ">=3.4 <3.6",
+    "zone.js": "~0.9.1"
+  },
+  "peerDependencies": {
+    "react": "^16",
+    "rxjs": "^6"
+  },
+  "ngPackage": {
+    "lib": {
+      "umdModuleIds": {
+        "react": "React"
+      }
+    }
+  }
+}
