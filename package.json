@@ -1,5 +1,5 @@
 {
-  "name": "prod-request-rxjs",
+  "name": "rx-react-component",
   "version": "0.0.1",
   "private": false,
   "description": "Service lookup helper via Consul",
