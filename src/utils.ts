@@ -1,12 +1,19 @@
-import { Observable, ReplaySubject, Subject } from 'rxjs';
+import { Observable, Observer, ReplaySubject, Subject } from 'rxjs';
 
-export type Consumer<T> = (aValue: T) => void;
+export interface Consumer<T> extends Observer<T> {
+  (aValue: T): void;
+}
 
 export const createSingleSubject = <T>() => new ReplaySubject<T>(1);
 
-export const createConsumerOnSubject = <T>(
-  aSubject: Subject<T>
-): Consumer<T> => (aValue) => aSubject.next(aValue);
+export const observerAsConsumer = <T>(aSubject: Observer<T>): Consumer<T> => {
+  // hook the methods
+  const next = (aValue: T) => aSubject.next(aValue);
+  const error = (err: any) => aSubject.error(err);
+  const complete = () => aSubject.complete();
+  // returns the consumer
+  return Object.assign(next, { next, error, complete });
+};
 
 /**
  * Converts a subject to an observable

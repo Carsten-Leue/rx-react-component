@@ -1,0 +1,86 @@
+Arguments: 
+  C:\Program Files\nodejs\node.exe C:\Program Files (x86)\Yarn\bin\yarn.js install
+
+PATH: 
+  C:\ProgramData\DockerDesktop\version-bin;C:\Program Files\Docker\Docker\Resources\bin;C:\Python37\Scripts\;C:\Python37\;C:\Python27\;C:\Python27\Scripts;C:\Program Files (x86)\Common Files\Oracle\Java\javapath;C:\Program Files (x86)\Windows Resource Kits\Tools\;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;C:\ProgramData\chocolatey\bin;C:\Program Files\Calibre2\;C:\Program Files\Intel\WiFi\bin\;C:\Program Files\Common Files\Intel\WirelessCommon\;C:\ProgramData\nvm;C:\Program Files\nodejs;C:\Program Files\Java\jdk1.8.0_191\bin;C:\Program Files\Java\jdk1.8.0_201\bin;C:\Program Files\Java\jdk-11.0.2\bin;C:\Program Files\NVIDIA Corporation\NVIDIA NvDLISR;C:\Users\cleue\AppData\Roaming\Python\Python37\Scripts;C:\Program Files\Java\jdk1.8.0_211\bin;C:\Program Files\OpenSSL\bin;C:\ProgramData\chocolatey\lib\maven\apache-maven-3.6.1\bin;C:\Program Files\nodejs\;C:\Program Files\Git\cmd;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;C:\Program Files (x86)\Intel\Intel(R) Management Engine Components\DAL;C:\Program Files\Intel\Intel(R) Management Engine Components\DAL;C:\Program Files\MiKTeX 2.9\miktex\bin\x64\;C:\Program Files (x86)\Yarn\bin\;C:\Program Files (x86)\Windows Kits\8.1\Windows Performance Toolkit\;C:\Users\cleue\AppData\Local\Microsoft\WindowsApps;C:\Users\cleue\AppData\Local\Programs\Microsoft VS Code\bin;C:\ProgramData\chocolatey\lib\msys2;C:\tools\msys64;C:\Program Files\Intel\WiFi\bin\;C:\Program Files\Common Files\Intel\WirelessCommon\;C:\Users\cleue\AppData\Local\Programs\Fiddler;C:\Users\cleue\AppData\Local\GitHubDesktop\bin;C:\Users\cleue\AppData\Local\Microsoft\WindowsApps;C:\Users\cleue\AppData\Roaming\npm;C:\Users\cleue\AppData\Local\Yarn\bin;C:\ProgramData\chocolatey\lib\mingw\tools\install\mingw64\bin;
+
+Yarn version: 
+  1.19.0
+
+Node version: 
+  10.16.3
+
+Platform: 
+  win32 x64
+
+Trace: 
+  Error: http://localhost:8081/nexus/content/repositories/acoustic/@angular%2fcompiler: socket hang up
+      at createHangUpError (_http_client.js:323:15)
+      at Socket.socketOnEnd (_http_client.js:426:23)
+      at Socket.emit (events.js:203:15)
+      at endReadableNT (_stream_readable.js:1145:12)
+      at process._tickCallback (internal/process/next_tick.js:63:19)
+
+npm manifest: 
+  {
+    "name": "rx-react-component",
+    "version": "0.1.6",
+    "private": false,
+    "description": "Utility functions to express a React component using RXJS principles.",
+    "keywords": [
+      "observable",
+      "react",
+      "reactive",
+      "rx",
+      "rxjs"
+    ],
+    "bugs": {
+      "url": "https://github.com/Carsten-Leue/rx-react-component/issues"
+    },
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/Carsten-Leue/rx-react-component.git"
+    },
+    "license": "MIT",
+    "author": {
+      "name": "Carsten Leue",
+      "email": "carsten.leue+github@gmail.com"
+    },
+    "sideEffects": false,
+    "scripts": {
+      "build": "ng-packagr -p package.json"
+    },
+    "dependencies": {},
+    "devDependencies": {
+      "@angular/compiler": "^8.2.8",
+      "@angular/compiler-cli": "^8.2.8",
+      "@angular/core": "^8.2.8",
+      "@types/react": "^16.9.3",
+      "ng-packagr": "^5.5.1",
+      "react": "^16.10.1",
+      "rxjs": "^6.4.0",
+      "tslib": "^1.10.0",
+      "typescript": ">=3.4 <3.6",
+      "zone.js": "~0.9.1"
+    },
+    "peerDependencies": {
+      "react": "^16",
+      "rxjs": "^6"
+    },
+    "publishConfig": {
+      "access": "public"
+    },
+    "ngPackage": {
+      "lib": {
+        "umdModuleIds": {
+          "react": "React"
+        }
+      }
+    }
+  }
+
+yarn manifest: 
+  No manifest
+
+Lockfile: 
+  No lockfile

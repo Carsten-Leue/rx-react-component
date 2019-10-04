@@ -18,8 +18,8 @@ import {
 import {
   asObservable,
   Consumer,
-  createConsumerOnSubject,
-  createSingleSubject
+  createSingleSubject,
+  observerAsConsumer
 } from './utils';
 
 /**
@@ -96,10 +96,10 @@ export abstract class RxComponent<
     this.props$ = props.pipe(distinctUntilChanged());
     this.errors$ = asObservable(errors);
     // attach the bound callbacks
-    this[symNextProp] = createConsumerOnSubject(props);
-    this[symNextInit] = createConsumerOnSubject(init);
-    this[symNextDone] = createConsumerOnSubject(done);
-    const nextErrors = (this[symNextErrors] = createConsumerOnSubject(errors));
+    this[symNextProp] = observerAsConsumer(props);
+    this[symNextInit] = observerAsConsumer(init);
+    this[symNextDone] = observerAsConsumer(done);
+    const nextErrors = (this[symNextErrors] = observerAsConsumer(errors));
     // state operator
     this[symOpState] = (state$) => {
       // use state both for the initial value as well as for updates
