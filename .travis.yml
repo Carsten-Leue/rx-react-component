@@ -1,12 +1,17 @@
 language: node_js
 node_js:
   - 'lts/*'
+cache: yarn
+install:
+  - yarn install
 script:
-  - npm run build
+  - yarn build
 before_deploy:
   - cd dist
 deploy:
   provider: npm
   skip_cleanup: true
+  email: '$NPM_EMAIL'
+  api_key: '$NPM_TOKEN'
   on:
     tags: true
