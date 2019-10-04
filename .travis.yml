@@ -7,9 +7,6 @@ before_deploy:
   - cd dist
 deploy:
   provider: npm
-  email: 'carsten.leue+npm@gmail.com'
   skip_cleanup: true
-  api_key:
-    secret: 'rkIuH8yuAfUwu2f3KG6WgoamK3ivLQC1v9Fb7W3kZusp0rd4HY2C8LS59a0VmJnafuLOkvnkDwUsw/AXyYJQuHsWm45eSIQwvS6lmVXKwlLziF26PMlDoG5IJOTlfQ7IJbipbwpNuDw1cYR50VZWYE41jIdXrwfZJ4NFadnO/T8lEy0gJPwzRpc0+ca0U/ZlUtbQ7Evzz3Bwogt5RxoyHsjAnybNrFX5xa97gbwhAf8O6irqrPiSVZ2E5D6LmM+ftUehgI0HR8GNK5DeOQ5lqXNNulDWMeyywHC5ssJYXWdwvOBqRiPdodJuVYqdM4jVUW7LbAUw5UG2v9dPC+akFEPilfhzjXRpIz3G920L8/nQpYVzLPMwbM0CkvlB+k0tTHBha0e15U4G4XKNp5V7M6uBTZyBPT4C5hGTNcjW2e/kiFvCFlo7zYmcsEVsILlNrrG+XnOwT2QbkGI+DO9ACWTcI31RVDtvxsfH4Gk92LSiihUIpZl0EKMdxbWBpory11Rzz2sXHjSjSD+VzkS6F9k6YcCPT62T3665HhHRcj1dRJ/3ydw0Cn2uHTkVZlELQHn7gPJF/v2Mm86r189VHIKnONfF2R3A8E1OCRSalF5axjazqdft+MS02Nr6+Frvwd5XPghJVSLIR/YwTXaxjtzo13/QOK3NjsOYbb3104o='
   on:
     tags: true
