@@ -2,28 +2,25 @@ import { ErrorInfo, PureComponent } from 'react';
 import {
   BehaviorSubject,
   combineLatest,
+  merge,
   Observable,
   OperatorFunction,
-  ReplaySubject,
-  Subject,
   Subscription
 } from 'rxjs';
 import {
   distinctUntilChanged,
-  first,
   map,
   retryWhen,
+  share,
   takeUntil
 } from 'rxjs/operators';
 
-/**
- * Converts a subject to an observable
- *
- * @param subject  - the subject
- * @returns the observable
- */
-const asObservable: <T>(aSubject: Subject<T>) => Observable<T> = (subject) =>
-  subject.asObservable();
+import {
+  asObservable,
+  Consumer,
+  createConsumerOnSubject,
+  createSingleSubject
+} from './utils';
 
 /**
  * Our private symbols
@@ -33,14 +30,6 @@ const symNextInit = Symbol();
 const symNextDone = Symbol();
 const symNextErrors = Symbol();
 const symOpState = Symbol();
-
-type Consumer<T> = (aValue: T) => void;
-
-const createSingleSubject = <T>() => new ReplaySubject<T>(1);
-
-const createConsumerOnSubject = <T>(aSubject: Subject<T>): Consumer<T> => (
-  aValue
-) => aSubject.next(aValue);
 
 /**
  * Base class for react components that compute their state via reactive streams. The life cycle methods are available
@@ -102,8 +91,8 @@ export abstract class RxComponent<
     const errors = createSingleSubject<any>();
     const props = new BehaviorSubject<Readonly<P>>(aInitial);
     // make the internals accessible to subclasses
-    const init$ = (this.init$ = init.pipe(first()));
-    const done$ = (this.done$ = done.pipe(first()));
+    const init$ = (this.init$ = asObservable(init));
+    const done$ = (this.done$ = asObservable(done));
     this.props$ = props.pipe(distinctUntilChanged());
     this.errors$ = asObservable(errors);
     // attach the bound callbacks
@@ -112,14 +101,28 @@ export abstract class RxComponent<
     this[symNextDone] = createConsumerOnSubject(done);
     const nextErrors = (this[symNextErrors] = createConsumerOnSubject(errors));
     // state operator
-    this[symOpState] = (state$) =>
-      combineLatest([state$, init$]).pipe(
-        map(([state]) => state),
-        distinctUntilChanged(),
-        map((state) => this.setState(state)),
-        retryWhen(map(nextErrors)),
-        takeUntil(done$)
+    this[symOpState] = (state$) => {
+      // use state both for the initial value as well as for updates
+      const shared$ = state$.pipe(
+        share(),
+        distinctUntilChanged()
       );
+      // initial
+      const initial$ = shared$.pipe(
+        map((state) => (this.state = state)),
+        takeUntil(init$)
+      );
+      // update
+      const current$ = combineLatest([shared$, init$]).pipe(
+        map(([state]) => this.setState(state)),
+        retryWhen(map(nextErrors))
+      );
+      /**
+       * Merge and make sure we end the subscription when the
+       * subscription closes
+       */
+      return merge(initial$, current$).pipe(takeUntil(done$));
+    };
   }
 
   /** {@inheritdoc react:PureComponent} */
