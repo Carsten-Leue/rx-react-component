@@ -1,6 +1,6 @@
 {
   "name": "rx-react-component",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "private": false,
   "description": "Service lookup helper via Consul",
   "keywords": [],
