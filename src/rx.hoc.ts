@@ -1,9 +1,4 @@
-import {
-  ComponentClass,
-  createElement,
-  FunctionComponent,
-  ReactNode
-} from 'react';
+import { ComponentClass, createElement, FunctionComponent } from 'react';
 import { Observable } from 'rxjs';
 
 import { RxComponent } from './rx.component';
