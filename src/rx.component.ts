@@ -1,4 +1,4 @@
-import { ErrorInfo, PureComponent } from 'react';
+import { Component, ErrorInfo } from 'react';
 import {
   BehaviorSubject,
   combineLatest,
@@ -40,11 +40,11 @@ const symOpState = Symbol();
  *
  * Methods overridden: {@link RxComponent.componentDidMount | componentDidMount}, {@link RxComponent.componentWillUnmount | componentWillUnmount}, {@link RxComponent.componentDidUpdate | componentDidUpdate}
  */
-export abstract class RxComponent<
-  P = {},
-  S = {},
-  SS = any
-> extends PureComponent<P, S, SS> {
+export abstract class RxComponent<P = {}, S = {}, SS = any> extends Component<
+  P,
+  S,
+  SS
+> {
   /**
    * Emits when the component produces an error
    */
@@ -101,7 +101,7 @@ export abstract class RxComponent<
     this[symNextDone] = observerAsConsumer(done);
     const nextErrors = (this[symNextErrors] = observerAsConsumer(errors));
     // state operator
-    this[symOpState] = (state$) => {
+    this[symOpState] = state$ => {
       // use state both for the initial value as well as for updates
       const shared$ = state$.pipe(
         share(),
@@ -109,7 +109,7 @@ export abstract class RxComponent<
       );
       // initial
       const initial$ = shared$.pipe(
-        map((state) => (this.state = state)),
+        map(state => (this.state = state)),
         takeUntil(init$)
       );
       // update
@@ -123,6 +123,15 @@ export abstract class RxComponent<
        */
       return merge(initial$, current$).pipe(takeUntil(done$));
     };
+  }
+
+  /** {@inheritdoc react:PureComponent} */
+  shouldComponentUpdate(nextProps: Readonly<P>, nextState: Readonly<S>) {
+    /** We assume that the rendering only depends on the state
+     * and that state changes will lead to a new state object and will
+     * not mutate the existing state.
+     */
+    return this.state !== nextState;
   }
 
   /** {@inheritdoc react:PureComponent} */
