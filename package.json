@@ -1,6 +1,6 @@
 {
   "name": "rx-react-component",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "private": false,
   "description": "Utility functions to express a React component using RxJS principles.",
   "keywords": [
