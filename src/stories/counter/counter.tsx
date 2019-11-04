@@ -1,44 +1,43 @@
 import * as React from 'react';
 import { MouseEvent } from 'react';
-import { Subject, UnaryFunction } from 'rxjs';
-import { map, scan, startWith } from 'rxjs/operators';
+import { merge, Observable, Subject, UnaryFunction } from 'rxjs';
+import { map, scan, switchMap } from 'rxjs/operators';
 
-import { RxComponent } from '../../rx.component';
+import { rxComponent } from '../../rx.hoc';
+import { bindNext, prop } from '../../utils';
 
 export interface CounterProps {
   initial: number;
 }
 
 export interface CounterState {
-  value: number;
+  counter: number;
+  onClick: UnaryFunction<MouseEvent, void>;
 }
 
-export class Counter extends RxComponent<CounterProps, CounterState> {
-  private readonly onClick: UnaryFunction<MouseEvent, void>;
+/**
+ * The view only component
+ */
+const viewOnly = ({ counter: value, onClick }: CounterState) => (
+  <div>
+    <div>Counter {value}</div>
+    <button onClick={onClick}>Increment</button>
+  </div>
+);
 
-  constructor(aProps: Readonly<CounterProps>) {
-    super(aProps);
+function bloc(props$: Observable<CounterProps>): Observable<CounterState> {
+  const initial$ = props$.pipe(prop('initial'));
 
-    const clickSubject = new Subject<any>();
-    const value$ = clickSubject.pipe(
-      startWith(null),
-      scan(value => value + 1, aProps.initial - 1)
-    );
+  const clickSubject = new Subject<any>();
+  const click$ = initial$.pipe(
+    switchMap(initial => clickSubject.pipe(scan(value => value + 1, initial)))
+  );
 
-    this.onClick = clickSubject.next.bind(clickSubject);
+  const onClick = bindNext(clickSubject);
 
-    const state$ = value$.pipe(map(value => ({ value })));
+  const value$ = merge(initial$, click$);
 
-    this.connectState(state$);
-  }
-
-  render() {
-    const { value } = this.state;
-    return (
-      <div>
-        <div>Counter {value}</div>
-        <button onClick={this.onClick}>Increment</button>
-      </div>
-    );
-  }
+  return value$.pipe(map(counter => ({ counter, onClick })));
 }
+
+export const Counter = rxComponent<CounterProps, CounterState>(bloc, viewOnly);

@@ -9,7 +9,7 @@ The react library makes sure to re-render a component when updates to properties
 From a performance perspective we want make sure:
 
 - the execution of the `render` method of a component should be as fast as possible, i.e. we want to avoid doing expensive computations or object allocations 
-- the number of times the `render` method is invoked should be as [small as possible](https://reactjs.org/docs/optimizing-performance.html#avoid-reconciliation). Each time `render` is called, react has to run its `reconciliation` algorithm to compare the virtual DOMs of the update vs the existing state. Although this is implemented very efficiently, it is even more efficient to avoid `reconciliation` altogether.
+- the number of times the `render` method is invoked should be as [small as possible](https://reactjs.org/docs/optimizing-performance.html#avoid-reconciliation). Each time `render` is called, react has to run its `reconciliation` algorithm to compare the virtual DOMs of the update vs the existing state. Although this is implemented very efficiently, it is even more efficient to avoid [reconciliation](https://reactjs.org/docs/reconciliation.html) altogether.
 
 ### Minimizing Render Time
 
@@ -31,12 +31,51 @@ We also mandate that objects carried in the component `state` are immutable, so 
 
 The discussed optimization patterns pivot around the idea to compute the ideal `state` for the rendering of a component. This gives us the opportunity to separate the task for computing this state into a [business logic only component (BLoC)](https://www.raywenderlich.com/4074597-getting-started-with-the-bloc-pattern) and the actual rendering into a view only component.
 
+## Example
+
+Before we start to explain the approach let's add a very simply hello world example:
+
+```tsx
+import * as React from 'react';
+import { pipe } from 'rxjs';
+import { map, pluck, distinctUntilChanged } from 'rxjs/operators';
+
+import { rxComponent } from 'rx-react-component';
+
+export interface HelloWorldProps {
+  name: string;
+}
+
+export interface HelloWorldState {
+  text: string;
+}
+
+// 1
+export const HelloWorld = rxComponent<HelloWorldProps, HelloWorldState>(
+  // 2
+  pipe(
+    pluck('name'),
+    distinctUntilChanged(),
+    map(name => ({ text: `Hello ${name}` }))
+  ),
+  // 3
+  ({ text }) => <div>{text}</div>
+);
+
+```
+
+Explanation: 
+
+1. Constructing a component with `HelloWorldProps` as input. The component will implement some simple business logic (prefix the input with `'Hello'`) and then pass the result to a view-only component.
+2. The business logic layer that transforms the input properties to state. Note how the [distinctUntilChanged](https://rxjs-dev.firebaseapp.com/api/operators/distinctUntilChanged) operator makes sure to update the state only if the input has really changed.
+3. The view-only component realized as a function component. 
+
 ## Approach
 
 We implement a base class for our performance optimized reactive component. The purpose of this class is to:
 
 - expose a reactive RxJS way to compute the `state` from properties, including reactive access to life cycle methods
-- minimize reconciliation by implementing the `shouldComponentUpdate` method
+- minimize [reconciliation](https://reactjs.org/docs/reconciliation.html) by implementing the `shouldComponentUpdate` method
 
 ### Minimizing Render Time
 
@@ -91,7 +130,7 @@ Derive your component from `RxComponent<P, S>` and implement a custom constructo
 - `init$`: the initialization event corresponding to `componentDidMount`. Behaves like `ReplaySubject(1)`.
 - `done$`: the destruction event corresponding to `componentWillUnmount`. Behaves like `ReplaySubject(1)`.
 
-Subclassed setup the state stream in the `constructor` and then call `this.connectState(state$)` to attach that stream to the baseclass. The baseclass will make sure to subscribe and unsubscribe to the state stream.
+Subclasses setup the state stream in the `constructor` and then call `this.connectState(state$)` to attach that stream to the baseclass. The baseclass will make sure to subscribe and unsubscribe to the state stream.
 
 ### Higher-order Component
 
@@ -100,12 +139,13 @@ You would use a higher-order component to cleanly separate between the active co
 
 Invoke the method `rxComponent<P, S>(stateFct, delegate)` to create a reactive React component, where:
 
-- `stateFct`: a function that gets `props$`, `init$`, `done$` as an input and that returns a state observable as a result.
-- `delegate`: a react component that receives the state as input properties.
+- `stateFct`: a function that gets `props$`, `init$`, `done$` as an input and that returns a state observable as a result. In case your transform only depends on the `props$` stream, you can simply use the [pipe](https://rxjs-dev.firebaseapp.com/api/index/function/pipe) function.
+- `delegate`: a react component that receives the state as input properties. Often this would be a [function component](https://reactjs.org/docs/components-and-props.html).
 
 ### Utility Functions
 
-- `observerAsConsumer`: this helper takes an [Observer](https://rxjs-dev.firebaseapp.com/api/index/interface/Observer) and converts into an [Observer](https://rxjs-dev.firebaseapp.com/api/index/interface/Observer) with an additional call signature. This allows the user of the consumer to either trigger a callback via the [Observer](https://rxjs-dev.firebaseapp.com/api/index/interface/Observer) methods (e.g. inside a `subscribe` call) or to directly invoke the object as a function, which is equivalent to invoke the `next` method on the observer.
+- `bindNext`: this helper takes an [Observer](https://rxjs-dev.firebaseapp.com/api/index/interface/Observer) and converts it into a simple function callback that invokes the `next` method. This is ideal for passing the result as a callback from the `BLoC` component to the `view-only` component.
+- `prop`: helper that takes the name of a property and returns an [OperatorFunction](https://rxjs-dev.firebaseapp.com/api/index/interface/OperatorFunction) that picks the property and returns a distinct stream of the result.
 
 
 ## Comparison of Concepts
