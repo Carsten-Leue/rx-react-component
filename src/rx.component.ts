@@ -5,7 +5,8 @@ import {
   merge,
   Observable,
   OperatorFunction,
-  Subscription
+  Subscription,
+  UnaryFunction
 } from 'rxjs';
 import {
   distinctUntilChanged,
@@ -15,12 +16,7 @@ import {
   takeUntil
 } from 'rxjs/operators';
 
-import {
-  asObservable,
-  Consumer,
-  createSingleSubject,
-  observerAsConsumer
-} from './utils';
+import { asObservable, bindNext, createSingleSubject } from './utils';
 
 /**
  * Our private symbols
@@ -30,6 +26,45 @@ const symNextInit = Symbol();
 const symNextDone = Symbol();
 const symNextErrors = Symbol();
 const symOpState = Symbol();
+
+/**
+ * Constructs the state transform
+ *
+ * @param init$   - init life cycle
+ * @param done$   - done life cycle
+ * @param nextErrors - error handler
+ * @param cmp - the component
+ *
+ * @returns the state operator function
+ */
+function opState<P, S>(
+  state$: Observable<S>,
+  init$: Observable<any>,
+  done$: Observable<any>,
+  nextErrors: UnaryFunction<any, void>,
+  cmp: Component<P, S>
+): Observable<any> {
+  // use state both for the initial value as well as for updates
+  const shared$ = state$.pipe(
+    share(),
+    distinctUntilChanged()
+  );
+  // initial
+  const initial$ = shared$.pipe(
+    map(state => (cmp.state = state)),
+    takeUntil(init$)
+  );
+  // update
+  const current$ = combineLatest([shared$, init$]).pipe(
+    map(([state]) => cmp.setState(state)),
+    retryWhen(map(nextErrors))
+  );
+  /**
+   * Merge and make sure we end the subscription when the
+   * subscription closes
+   */
+  return merge(initial$, current$).pipe(takeUntil(done$));
+}
 
 /**
  * Base class for react components that compute their state via reactive streams. The life cycle methods are available
@@ -72,10 +107,10 @@ export abstract class RxComponent<P = {}, S = {}, SS = any> extends Component<
   protected readonly props$: Observable<Readonly<P>>;
 
   // hidden state
-  private readonly [symNextProp]: Consumer<P>;
-  private readonly [symNextInit]: Consumer<any>;
-  private readonly [symNextDone]: Consumer<any>;
-  private readonly [symNextErrors]: Consumer<any>;
+  private readonly [symNextProp]: UnaryFunction<P, void>;
+  private readonly [symNextInit]: UnaryFunction<any, void>;
+  private readonly [symNextDone]: UnaryFunction<any, void>;
+  private readonly [symNextErrors]: UnaryFunction<any, void>;
   private readonly [symOpState]: OperatorFunction<S, any>;
 
   /**
@@ -96,33 +131,13 @@ export abstract class RxComponent<P = {}, S = {}, SS = any> extends Component<
     this.props$ = props.pipe(distinctUntilChanged());
     this.errors$ = asObservable(errors);
     // attach the bound callbacks
-    this[symNextProp] = observerAsConsumer(props);
-    this[symNextInit] = observerAsConsumer(init);
-    this[symNextDone] = observerAsConsumer(done);
-    const nextErrors = (this[symNextErrors] = observerAsConsumer(errors));
+    this[symNextProp] = bindNext(props);
+    this[symNextInit] = bindNext(init);
+    this[symNextDone] = bindNext(done);
+    const nextErrors = (this[symNextErrors] = bindNext(errors));
     // state operator
-    this[symOpState] = state$ => {
-      // use state both for the initial value as well as for updates
-      const shared$ = state$.pipe(
-        share(),
-        distinctUntilChanged()
-      );
-      // initial
-      const initial$ = shared$.pipe(
-        map(state => (this.state = state)),
-        takeUntil(init$)
-      );
-      // update
-      const current$ = combineLatest([shared$, init$]).pipe(
-        map(([state]) => this.setState(state)),
-        retryWhen(map(nextErrors))
-      );
-      /**
-       * Merge and make sure we end the subscription when the
-       * subscription closes
-       */
-      return merge(initial$, current$).pipe(takeUntil(done$));
-    };
+    this[symOpState] = state$ =>
+      opState(state$, init$, done$, nextErrors, this);
   }
 
   /** {@inheritdoc react:PureComponent} */

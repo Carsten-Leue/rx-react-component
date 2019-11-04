@@ -1,21 +1,15 @@
-import { Observable, Observer, ReplaySubject, Subject } from 'rxjs';
-
-export interface Consumer<T> extends Observer<T> {
-  (aValue: T): void;
-}
+import {
+  Observable,
+  Observer,
+  ReplaySubject,
+  Subject,
+  UnaryFunction
+} from 'rxjs';
 
 export const createSingleSubject = <T>() => new ReplaySubject<T>(1);
 
-export const observerAsConsumer = <T>(
-  aSubject: Observer<T> = new Subject<T>()
-): Consumer<T> => {
-  // hook the methods
-  const next = (aValue: T) => aSubject.next(aValue);
-  const error = (err: any) => aSubject.error(err);
-  const complete = () => aSubject.complete();
-  // returns the consumer
-  return Object.assign(next, { next, error, complete });
-};
+export const bindNext = <T>(aSubject: Observer<T>): UnaryFunction<T, void> =>
+  aSubject.next.bind(aSubject);
 
 /**
  * Converts a subject to an observable

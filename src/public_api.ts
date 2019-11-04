@@ -1,3 +1,3 @@
 export { RxComponent } from './rx.component';
 export * from './rx.hoc';
-export { observerAsConsumer } from './utils';
+export { bindNext } from './utils';
