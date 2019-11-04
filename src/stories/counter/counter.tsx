@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { MouseEvent } from 'react';
-import { Subject } from 'rxjs';
+import { Subject, UnaryFunction } from 'rxjs';
 import { map, scan, startWith } from 'rxjs/operators';
 
 import { RxComponent } from '../../rx.component';
@@ -14,7 +14,7 @@ export interface CounterState {
 }
 
 export class Counter extends RxComponent<CounterProps, CounterState> {
-  private readonly onClick: (evt: MouseEvent) => void;
+  private readonly onClick: UnaryFunction<MouseEvent, void>;
 
   constructor(aProps: Readonly<CounterProps>) {
     super(aProps);

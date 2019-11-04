@@ -6,7 +6,9 @@ export interface Consumer<T> extends Observer<T> {
 
 export const createSingleSubject = <T>() => new ReplaySubject<T>(1);
 
-export const observerAsConsumer = <T>(aSubject: Observer<T>): Consumer<T> => {
+export const observerAsConsumer = <T>(
+  aSubject: Observer<T> = new Subject<T>()
+): Consumer<T> => {
   // hook the methods
   const next = (aValue: T) => aSubject.next(aValue);
   const error = (err: any) => aSubject.error(err);
@@ -21,6 +23,6 @@ export const observerAsConsumer = <T>(aSubject: Observer<T>): Consumer<T> => {
  * @param subject  - the subject
  * @returns the observable
  */
-export const asObservable: <T>(aSubject: Subject<T>) => Observable<T> = (
-  subject
-) => subject.asObservable();
+export const asObservable: <T>(
+  aSubject: Subject<T>
+) => Observable<T> = subject => subject.asObservable();
