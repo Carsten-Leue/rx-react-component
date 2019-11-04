@@ -1,10 +1,8 @@
 import {
-  Observable,
   Observer,
   OperatorFunction,
   pipe,
   ReplaySubject,
-  Subject,
   UnaryFunction
 } from 'rxjs';
 import { distinctUntilChanged, pluck } from 'rxjs/operators';
@@ -37,13 +35,3 @@ export const prop = <T, K extends keyof T>(
     pluck(aKey),
     distinctUntilChanged(aCmp)
   );
-
-/**
- * Converts a subject to an observable
- *
- * @param subject  - the subject
- * @returns the observable
- */
-export const asObservable: <T>(
-  aSubject: Subject<T>
-) => Observable<T> = subject => subject.asObservable();

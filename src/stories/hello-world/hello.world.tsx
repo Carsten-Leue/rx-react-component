@@ -2,8 +2,7 @@ import * as React from 'react';
 import { pipe } from 'rxjs';
 import { map } from 'rxjs/operators';
 
-import { rxComponent } from '../../rx.hoc';
-import { prop } from '../../utils';
+import { prop, rxComponent } from '../../public_api';
 
 export interface HelloWorldProps {
   name: string;

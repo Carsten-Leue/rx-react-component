@@ -3,14 +3,13 @@ import { MouseEvent } from 'react';
 import { merge, Observable, Subject, UnaryFunction } from 'rxjs';
 import { map, scan, switchMap } from 'rxjs/operators';
 
-import { rxComponent } from '../../rx.hoc';
-import { bindNext, prop } from '../../utils';
+import { bindNext, prop, rxComponent } from '../../public_api';
 
 export interface CounterProps {
   initial: number;
 }
 
-export interface CounterState {
+export interface CounterViewProps {
   counter: number;
   onClick: UnaryFunction<MouseEvent, void>;
 }
@@ -18,14 +17,14 @@ export interface CounterState {
 /**
  * The view only component
  */
-const viewOnly = ({ counter, onClick }: CounterState) => (
+const viewOnly = ({ counter, onClick }: CounterViewProps) => (
   <div>
     <div>Counter {counter}</div>
     <button onClick={onClick}>Increment</button>
   </div>
 );
 
-function bloc(props$: Observable<CounterProps>): Observable<CounterState> {
+function bloc(props$: Observable<CounterProps>): Observable<CounterViewProps> {
   const initial$ = props$.pipe(prop('initial'));
 
   const clickSubject = new Subject<any>();
@@ -40,4 +39,7 @@ function bloc(props$: Observable<CounterProps>): Observable<CounterState> {
   return value$.pipe(map(counter => ({ counter, onClick })));
 }
 
-export const Counter = rxComponent<CounterProps, CounterState>(bloc, viewOnly);
+export const Counter = rxComponent<CounterProps, CounterViewProps>(
+  bloc,
+  viewOnly
+);

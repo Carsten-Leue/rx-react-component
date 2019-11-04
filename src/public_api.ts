@@ -1,3 +1,2 @@
-export { RxComponent } from './rx.component';
-export * from './rx.hoc';
+export * from './rx.component';
 export { bindNext, prop } from './utils';

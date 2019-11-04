@@ -3,15 +3,14 @@ import { MouseEvent } from 'react';
 import { EMPTY, merge, Observable, Subject, UnaryFunction } from 'rxjs';
 import { map, switchMapTo, withLatestFrom } from 'rxjs/operators';
 
-import { rxComponent } from '../../rx.hoc';
-import { bindNext, prop } from '../../utils';
+import { bindNext, prop, rxComponent } from '../../public_api';
 
 export interface ControlledCounterProps {
   value: number;
-  onIncrement: UnaryFunction<number, void>;
+  onValue: UnaryFunction<number, void>;
 }
 
-export interface ControlledCounterState {
+export interface CounterViewProps {
   counter: number;
   onClick: UnaryFunction<MouseEvent, void>;
 }
@@ -19,7 +18,7 @@ export interface ControlledCounterState {
 /**
  * The view only component
  */
-const viewOnly = ({ counter, onClick }: ControlledCounterState) => (
+const viewOnly = ({ counter, onClick }: CounterViewProps) => (
   <div>
     <div>ControlledCounter {counter}</div>
     <button onClick={onClick}>Increment</button>
@@ -28,7 +27,7 @@ const viewOnly = ({ counter, onClick }: ControlledCounterState) => (
 
 function bloc(
   props$: Observable<ControlledCounterProps>
-): Observable<ControlledCounterState> {
+): Observable<CounterViewProps> {
   // the controlled input
   const value$ = props$.pipe(prop('value'));
 
@@ -37,7 +36,7 @@ function bloc(
 
   const click$ = clickSubject.pipe(
     withLatestFrom(value$, props$),
-    map(([, value, { onIncrement }]) => onIncrement(value + 1)),
+    map(([, value, { onValue }]) => onValue(value + 1)),
     switchMapTo(EMPTY)
   );
 
@@ -46,5 +45,5 @@ function bloc(
 
 export const ControlledCounter = rxComponent<
   ControlledCounterProps,
-  ControlledCounterState
+  CounterViewProps
 >(bloc, viewOnly);

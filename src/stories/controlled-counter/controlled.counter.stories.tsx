@@ -3,15 +3,14 @@ import * as React from 'react';
 import { BehaviorSubject } from 'rxjs';
 import { map } from 'rxjs/operators';
 
-import { rxComponent } from '../../rx.hoc';
-import { bindNext } from '../../utils';
+import { bindNext, rxComponent } from '../../public_api';
 import { ControlledCounter } from './controlled.counter';
 
 const StoryHolder = rxComponent(
   () => {
     const increment = new BehaviorSubject(0);
-    const onIncrement = bindNext(increment);
-    return increment.pipe(map(value => ({ value, onIncrement })));
+    const onValue = bindNext(increment);
+    return increment.pipe(map(value => ({ value, onValue })));
   },
   props => <ControlledCounter {...props}></ControlledCounter>
 );

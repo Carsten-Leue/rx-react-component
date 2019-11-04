@@ -1,11 +1,10 @@
-import { Component, ErrorInfo } from 'react';
+import { Component } from 'react';
+import { ComponentClass, createElement, FunctionComponent } from 'react';
 import {
   BehaviorSubject,
   combineLatest,
   merge,
   Observable,
-  OperatorFunction,
-  Subscription,
   UnaryFunction
 } from 'rxjs';
 import {
@@ -16,16 +15,17 @@ import {
   takeUntil
 } from 'rxjs/operators';
 
-import { asObservable, bindNext, createSingleSubject } from './utils';
+import { bindNext, createSingleSubject } from './utils';
 
-/**
- * Our private symbols
- */
-const symNextProp = Symbol();
-const symNextInit = Symbol();
-const symNextDone = Symbol();
-const symNextErrors = Symbol();
-const symOpState = Symbol();
+export type StateFunction<P, S> = (
+  props$: Observable<Readonly<P>>,
+  init$: Observable<undefined>,
+  done$: Observable<undefined>
+) => Observable<Readonly<S>>;
+
+export type DelegateComponent<S, DS = any> =
+  | FunctionComponent<S>
+  | ComponentClass<S, DS>;
 
 /**
  * Constructs the state transform
@@ -66,120 +66,81 @@ function opState<P, S>(
   return merge(initial$, current$).pipe(takeUntil(done$));
 }
 
-/**
- * Base class for react components that compute their state via reactive streams. The life cycle methods are available
- * via observables that fire at the appropriate time.
- *
- * In the constructor of the subclass call the {@link RxComponent.connectState | connectState} with on observable that will compute
- * the component state based on arbitrary information.
- *
- * Methods overridden: {@link RxComponent.componentDidMount | componentDidMount}, {@link RxComponent.componentWillUnmount | componentWillUnmount}, {@link RxComponent.componentDidUpdate | componentDidUpdate}
- */
-export abstract class RxComponent<P = {}, S = {}, SS = any> extends Component<
-  P,
-  S,
-  SS
-> {
-  /**
-   * Emits when the component produces an error
-   */
-  protected readonly errors$: Observable<any>;
-
-  /**
-   * Emits when the component initializes
-   *
-   * {@link RxComponent.componentDidMount | componentDidMount}
-   */
-  protected readonly init$: Observable<any>;
-
-  /**
-   * Emits when the component shuts down
-   *
-   * {@link RxComponent.componentWillUnmount | componentWillUnmount}
-   */
-  protected readonly done$: Observable<any>;
-
-  /**
-   * Emits when the component receives new properties or initially with the current properties
-   *
-   * {@link RxComponent.componentDidUpdate | componentDidUpdate}
-   */
-  protected readonly props$: Observable<Readonly<P>>;
-
-  // hidden state
-  private readonly [symNextProp]: UnaryFunction<P, void>;
-  private readonly [symNextInit]: UnaryFunction<any, void>;
-  private readonly [symNextDone]: UnaryFunction<any, void>;
-  private readonly [symNextErrors]: UnaryFunction<any, void>;
-  private readonly [symOpState]: OperatorFunction<S, any>;
-
-  /**
-   * Initializes the component with a current set of properties
-   *
-   * @param aInitial - the initial set of properties
-   */
-  protected constructor(aInitial: Readonly<P>) {
-    super(aInitial);
-    // construct our subjects
-    const init = createSingleSubject<boolean>();
-    const done = createSingleSubject<boolean>();
-    const errors = createSingleSubject<any>();
-    const props = new BehaviorSubject<Readonly<P>>(aInitial);
-    // make the internals accessible to subclasses
-    const init$ = (this.init$ = asObservable(init));
-    const done$ = (this.done$ = asObservable(done));
-    this.props$ = props.pipe(distinctUntilChanged());
-    this.errors$ = asObservable(errors);
-    // attach the bound callbacks
-    this[symNextProp] = bindNext(props);
-    this[symNextInit] = bindNext(init);
-    this[symNextDone] = bindNext(done);
-    const nextErrors = (this[symNextErrors] = bindNext(errors));
-    // state operator
-    this[symOpState] = state$ =>
-      opState(state$, init$, done$, nextErrors, this);
-  }
-
-  /** {@inheritdoc react:PureComponent} */
-  shouldComponentUpdate(nextProps: Readonly<P>, nextState: Readonly<S>) {
+function initComponent<P, S, DS>(
+  aStateFct: StateFunction<P, S>,
+  aDelegate: DelegateComponent<S, DS>,
+  aInitial: Readonly<P>,
+  aCmp: Component<P, S>
+): Observable<any> {
+  // construct our subjects
+  const init$ = createSingleSubject<undefined>();
+  const done$ = createSingleSubject<undefined>();
+  const errors$ = createSingleSubject<any>();
+  const props = new BehaviorSubject<Readonly<P>>(aInitial);
+  // make the internals accessible to subclasses
+  const props$ = props.pipe(distinctUntilChanged());
+  // attach the bound callbacks
+  const nextErrors = bindNext(errors$);
+  // functions
+  const shouldComponentUpdate = (
+    aNextProps: Readonly<P>,
+    aNextState: Readonly<S>
+  ) => {
     /**
      * dispatch the new props
      */
-    this[symNextProp](nextProps);
+    props.next(aNextProps);
     /** We assume that the rendering only depends on the state
      * and that state changes will lead to a new state object and will
      * not mutate the existing state.
      */
-    return this.state !== nextState;
-  }
+    return aCmp.state !== aNextState;
+  };
 
-  /** {@inheritdoc react:PureComponent} */
-  componentDidMount() {
-    this[symNextInit](true);
-  }
+  const componentDidMount = bindNext(init$);
 
-  /** {@inheritdoc react:PureComponent} */
-  componentWillUnmount() {
-    this[symNextDone](true);
-  }
+  const componentWillUnmount = bindNext(done$);
 
-  /** {@inheritdoc react:PureComponent} */
-  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+  const componentDidCatch = nextErrors;
+
+  const render = () => {
+    const { state } = aCmp;
+    return state ? createElement(aDelegate, state) : null;
+  };
+
+  // attach
+  Object.assign(aCmp, {
+    shouldComponentUpdate,
+    componentDidMount,
+    componentWillUnmount,
+    componentDidCatch,
+    render
+  });
+
+  // connect state
+  return opState(
+    aStateFct(props$, init$, done$),
+    init$,
+    done$,
+    nextErrors,
+    aCmp
+  );
+}
+
+export function rxComponent<P, S, DS = any>(
+  aStateFct: StateFunction<P, S>,
+  aDelegate: DelegateComponent<S, DS>
+): ComponentClass<P, S> {
+  return class extends Component<P, S> {
     /**
-     * dispatch to the error handler
+     * Initialize our new component
+     *
+     * @param aInitial - the initial props
      */
-    this[symNextErrors](error);
-  }
-
-  /**
-   * Connects the state to the lifecycle and subscribes. It is not required - but possible - to unsubscribe,
-   * since this will happen in {@link RxComponent.componentWillUnmount | componentWillUnmount} automatically.
-   *
-   * @param aState$ - the state of the application
-   * @returns a handle that can be used to unsubscribe the connection. This is typically not required since the component unsubscribes when the component unmounts, automatically
-   */
-  protected connectState(aState$: Observable<S>): Subscription {
-    // update the state and subscribe once
-    return this[symOpState](aState$).subscribe();
-  }
+    constructor(aInitial: Readonly<P>) {
+      super(aInitial);
+      // initialize
+      initComponent(aStateFct, aDelegate, aInitial, this).subscribe();
+    }
+  };
 }
