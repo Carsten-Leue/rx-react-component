@@ -24,7 +24,7 @@ Per default, React will re-render a component if a property or the state changes
 - the rendering of the component might not depend directly on a property but rather on derived information of that property. And that might stay stable despite the property changing.
 - for controlled components we often pass in callback functions via properties. We can sometimes observe the (anti)pattern that host components bind member functions to callbacks inside their `render` calls or that they use lambda functions generated during render. This will create new function objects each time the host renders, causing an uneccessary re-render of the child component.
 
-So, in order to avoid these issues our strategy is to make sure that the rendering of the component does NOT use properties directly, but only information from the `state`. This is information the component developer has full control of. 
+So, in order to avoid these issues our strategy is to make sure that the rendering of the component does NOT use properties directly, but only information from the `state`. This is information the component developer has full control over. 
 We also mandate that objects carried in the component `state` are [immutable](https://reactjs.org/docs/optimizing-performance.html#the-power-of-not-mutating-data), so we can tell by a simple equals check if the state changed or not. 
 
 ### Separation of Concerns
@@ -87,7 +87,7 @@ The caller the `state$` observable based on input properties (via the `props$` o
 
 #### Initial state
 
-All state that is emitted by the `state$` observable before the `componentDidMount` method is invoked is considered initialization state automatically. You might e.g. use the [startWith](https://rxjs-dev.firebaseapp.com/api/operators/startWith) operator to make sure such state exist. There is no need (and no way) to set `this.state` explicitly.
+All state that is emitted by the `state$` observable before the `componentDidMount` method is invoked is considered initialization state automatically. You might e.g. use the [startWith](https://rxjs-dev.firebaseapp.com/api/operators/startWith) operator to make sure such state exists. There is no need (and no way) to set `this.state` explicitly.
 
 #### Input from the host component
 
@@ -97,7 +97,7 @@ Use operators such as [pluck](https://rxjs-dev.firebaseapp.com/api/operators/plu
 
 #### Input from child components
 
-Communication between from a child component into the parent component typically works by passing a callback function as an event handler via a property into the child. 
+Communication from a child component into the parent component typically works by passing a callback function as an event handler via a property into the child. 
 
 We distinguish between [controlled](https://reactjs.org/docs/forms.html#controlled-components) or uncontrolled components. A controlled component delegates its state to its host component and expects state changes to be mirrored back via its properties. An uncontrolled component maintains its on state.
 
