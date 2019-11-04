@@ -6,7 +6,7 @@ React components are based on the concept of [properties](https://reactjs.org/do
 
 The react library makes sure to re-render a component when updates to properties or state will have a visual effect.
 
-From a performance perspective we want make sure:
+From a performance perspective we want to make sure:
 
 - the execution of the `render` method of a component should be as fast as possible, i.e. we want to avoid doing expensive computations or object allocations 
 - the number of times the `render` method is invoked should be as [small as possible](https://reactjs.org/docs/optimizing-performance.html#avoid-reconciliation). Each time `render` is called, React has to run its [reconciliation](https://reactjs.org/docs/reconciliation.html) algorithm to compare the virtual DOMs of the update vs the existing state. Although this is implemented very efficiently, it is even more efficient to avoid [reconciliation](https://reactjs.org/docs/reconciliation.html) altogether.
@@ -24,7 +24,7 @@ Per default, React will re-render a component if a property or the state changes
 - the rendering of the component might not depend directly on a property but rather on derived information of that property. And that might stay stable despite the property changing.
 - for controlled components we often pass in callback functions via properties. We can sometimes observe the (anti)pattern that host components bind member functions to callbacks inside their `render` calls or that they use lambda functions generated during render. This will create new function objects each time the host renders, causing an uneccessary re-render of the child component.
 
-So in order to avoid these issues our strategy is to make sure that the rendering of the component does NOT use properties directly, but only information from the `state`. This is information the component developer has full control of. 
+So, in order to avoid these issues our strategy is to make sure that the rendering of the component does NOT use properties directly, but only information from the `state`. This is information the component developer has full control of. 
 We also mandate that objects carried in the component `state` are [immutable](https://reactjs.org/docs/optimizing-performance.html#the-power-of-not-mutating-data), so we can tell by a simple equals check if the state changed or not. 
 
 ### Separation of Concerns
@@ -170,7 +170,7 @@ export const Counter = rxComponent<CounterProps, CounterViewProps>(
 
 **Controlled BLoC**: The uncontrolled BLoC delegates state management to its host via a callback function in its properties. 
 
-Example: Again we have a counter with a button to increment it. This example uses the identical view implementation compared to the previous sample.
+Example: Again, we have a counter with a button to increment it. This example uses the identical view implementation compared to the previous sample.
 
 ```tsx
 /**

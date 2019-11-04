@@ -1,9 +1,9 @@
 import { render } from '@testing-library/react';
 import React, { PureComponent } from 'react';
-import { distinctUntilChanged, map, pluck } from 'rxjs/operators';
+import { Observable } from 'rxjs';
+import { distinctUntilChanged, map, pluck, startWith } from 'rxjs/operators';
 
-import { RxComponent } from './rx.component';
-import { rxComponent } from './rx.hoc';
+import { rxComponent } from './public_api';
 
 interface SampleProps {
   sampleInput: string;
@@ -13,26 +13,23 @@ interface SampleState {
   sampleState: string;
 }
 
-class SampleApp extends RxComponent<SampleProps, SampleState> {
-  constructor(aProps: Readonly<SampleProps>) {
-    super(aProps);
+const sampleAppView = (aProps: SampleState) => {
+  const { sampleState } = aProps;
+  return <div data-testid="sample-id">{sampleState}</div>;
+};
 
-    const DEFAULT_STATE: SampleState = { sampleState: 'initial' };
+const sampleAppBloc = (props$: Observable<SampleProps>) => {
+  const DEFAULT_STATE: SampleState = { sampleState: 'initial' };
 
-    const state$ = this.props$.pipe(
-      pluck('sampleInput'),
-      distinctUntilChanged(),
-      map((prop) => ({ sampleState: `computed ${prop}` }))
-    );
+  return props$.pipe(
+    pluck('sampleInput'),
+    distinctUntilChanged(),
+    startWith(DEFAULT_STATE),
+    map(prop => ({ sampleState: `computed ${prop}` }))
+  );
+};
 
-    this.connectState(state$);
-  }
-
-  render() {
-    const { state } = this;
-    return <div data-testid="sample-id">{state.sampleState}</div>;
-  }
-}
+const SampleApp = rxComponent(sampleAppBloc, sampleAppView);
 
 const ViewApp = (aProps: SampleState) => (
   <div data-testid="sample-id">{aProps.sampleState}</div>
@@ -41,11 +38,11 @@ const ViewApp = (aProps: SampleState) => (
 describe('app', () => {
   it('renders HOC', () => {
     const MyApp = rxComponent<SampleProps, SampleState>(
-      (props$) =>
+      props$ =>
         props$.pipe(
           pluck('sampleInput'),
           distinctUntilChanged(),
-          map((prop) => ({ sampleState: `computed ${prop}` }))
+          map(prop => ({ sampleState: `computed ${prop}` }))
         ),
       ViewApp
     );
