@@ -18,9 +18,9 @@ export interface CounterState {
 /**
  * The view only component
  */
-const viewOnly = ({ counter: value, onClick }: CounterState) => (
+const viewOnly = ({ counter, onClick }: CounterState) => (
   <div>
-    <div>Counter {value}</div>
+    <div>Counter {counter}</div>
     <button onClick={onClick}>Increment</button>
   </div>
 );

@@ -142,6 +142,10 @@ export abstract class RxComponent<P = {}, S = {}, SS = any> extends Component<
 
   /** {@inheritdoc react:PureComponent} */
   shouldComponentUpdate(nextProps: Readonly<P>, nextState: Readonly<S>) {
+    /**
+     * dispatch the new props
+     */
+    this[symNextProp](nextProps);
     /** We assume that the rendering only depends on the state
      * and that state changes will lead to a new state object and will
      * not mutate the existing state.
@@ -157,18 +161,6 @@ export abstract class RxComponent<P = {}, S = {}, SS = any> extends Component<
   /** {@inheritdoc react:PureComponent} */
   componentWillUnmount() {
     this[symNextDone](true);
-  }
-
-  /** {@inheritdoc react:PureComponent} */
-  componentDidUpdate(
-    prevProps: Readonly<P>,
-    prevState: Readonly<S>,
-    snapshot?: SS
-  ) {
-    /**
-     * dispatch the current props
-     */
-    this[symNextProp](this.props);
   }
 
   /** {@inheritdoc react:PureComponent} */
