@@ -26,7 +26,7 @@
   "scripts": {
     "build": "ng-packagr -p package.json",
     "storybook": "start-storybook -p 9001 -c .storybook",
-    "test": "react-scripts test"
+    "test": "jest"
   },
   "dependencies": {},
   "devDependencies": {
@@ -39,7 +39,7 @@
     "@storybook/react": "^5.2.5",
     "@testing-library/jest-dom": "^4.2.3",
     "@testing-library/react": "^9.3.1",
-    "@types/jest": "^24.0.21",
+    "@types/jest": "^24.0.22",
     "@types/node": "^12.12.5",
     "@types/react": "^16.9.11",
     "@types/react-dom": "^16.9.3",
@@ -50,8 +50,8 @@
     "react-docgen-typescript-loader": "^3.3.0",
     "react-docgen-typescript-webpack-plugin": "^1.1.0",
     "react-dom": "^16.11.0",
-    "react-scripts": "^3.2.0",
     "rxjs": "^6.4.0",
+    "ts-jest": "^24.1.0",
     "tslib": "^1.10.0",
     "typescript": ">=3.4 <3.6",
     "zone.js": "~0.9.1"
