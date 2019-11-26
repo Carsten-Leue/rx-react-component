@@ -17,8 +17,19 @@ import {
 
 import { bindNext, createSingleSubject } from './utils';
 
+/**
+ * Extension of an Observable that allows to access the current value. This
+ * is compatible to BehaviorSubject
+ */
+export interface ValueObservable<T> extends Observable<T> {
+  /**
+   * Accesses the current value of the observable
+   */
+  readonly value: T;
+}
+
 export type StateFunction<P, S> = (
-  props$: Observable<Readonly<P>>,
+  props$: ValueObservable<Readonly<P>>,
   init$: Observable<undefined>,
   done$: Observable<undefined>
 ) => Observable<Readonly<S>>;
@@ -45,10 +56,7 @@ function opState<P, S>(
   cmp: Component<P, S>
 ): Observable<any> {
   // use state both for the initial value as well as for updates
-  const shared$ = state$.pipe(
-    share(),
-    distinctUntilChanged()
-  );
+  const shared$ = state$.pipe(share(), distinctUntilChanged());
   // initial
   const initial$ = shared$.pipe(
     map(state => (cmp.state = state)),
@@ -78,7 +86,10 @@ function initComponent<P, S, DS>(
   const errors$ = createSingleSubject<any>();
   const props = new BehaviorSubject<Readonly<P>>(aInitial);
   // make the internals accessible to subclasses
-  const props$ = props.pipe(distinctUntilChanged());
+  const props$: ValueObservable<Readonly<P>> = props.pipe(
+    distinctUntilChanged()
+  ) as any;
+  Object.defineProperty(props$, 'value', { get: () => props.getValue() });
   // attach the bound callbacks
   const nextErrors = bindNext(errors$);
   // functions

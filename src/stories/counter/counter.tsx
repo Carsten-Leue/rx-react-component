@@ -1,9 +1,10 @@
 import * as React from 'react';
 import { MouseEvent } from 'react';
-import { merge, Observable, Subject, UnaryFunction } from 'rxjs';
-import { map, scan, switchMap } from 'rxjs/operators';
+import { Observable, Subject, UnaryFunction } from 'rxjs';
+import { map, scan, startWith } from 'rxjs/operators';
 
-import { bindNext, prop, rxComponent } from '../../public_api';
+import { bindNext, rxComponent } from '../../public_api';
+import { ValueObservable } from '../../rx.component';
 
 export interface CounterProps {
   initial: number;
@@ -24,19 +25,21 @@ const viewOnly = ({ counter, onClick }: CounterViewProps) => (
   </div>
 );
 
-function bloc(props$: Observable<CounterProps>): Observable<CounterViewProps> {
-  const initial$ = props$.pipe(prop('initial'));
+function bloc(
+  props$: ValueObservable<CounterProps>
+): Observable<CounterViewProps> {
+  // extract the initial value
+  const { initial } = props$.value;
 
   const clickSubject = new Subject<any>();
-  const click$ = initial$.pipe(
-    switchMap(initial => clickSubject.pipe(scan(value => value + 1, initial)))
+  const click$ = clickSubject.pipe(
+    scan(value => value + 1, initial),
+    startWith(initial)
   );
 
   const onClick = bindNext(clickSubject);
 
-  const value$ = merge(initial$, click$);
-
-  return value$.pipe(map(counter => ({ counter, onClick })));
+  return click$.pipe(map(counter => ({ counter, onClick })));
 }
 
 export const Counter = rxComponent<CounterProps, CounterViewProps>(

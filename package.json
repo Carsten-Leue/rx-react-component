@@ -25,7 +25,7 @@
   "sideEffects": false,
   "scripts": {
     "build": "ng-packagr -p package.json",
-    "storybook": "start-storybook -p 9001 -c .storybook",
+    "start": "start-storybook -p 9001 -c .storybook",
     "test": "jest"
   },
   "dependencies": {},
