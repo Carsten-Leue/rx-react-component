@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import { Component, PropsWithChildren } from 'react';
 import { ComponentClass, createElement, FunctionComponent } from 'react';
 import {
   BehaviorSubject,
@@ -29,7 +29,7 @@ export interface ValueObservable<T> extends Observable<T> {
 }
 
 export type StateFunction<P, S> = (
-  props$: ValueObservable<Readonly<P>>,
+  props$: ValueObservable<Readonly<PropsWithChildren<P>>>,
   init$: Observable<undefined>,
   done$: Observable<undefined>
 ) => Observable<Readonly<S>>;
@@ -115,8 +115,11 @@ function initComponent<P, S, DS>(
   const componentDidCatch = nextErrors;
 
   const render = () => {
-    const { state } = aCmp;
-    return state ? createElement(aDelegate, state) : null;
+    const {
+      state,
+      props: { children }
+    } = aCmp;
+    return state ? createElement(aDelegate, state, children) : null;
   };
 
   // attach
