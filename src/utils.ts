@@ -30,8 +30,16 @@ export const bindNext = <T>(aSubject: Observer<T>): UnaryFunction<T, void> =>
 export const prop = <T, K extends keyof T>(
   aKey: K,
   aCmp?: (x: T[K], y: T[K]) => boolean
-): OperatorFunction<T, T[K]> =>
-  pipe(
-    pluck(aKey),
-    distinctUntilChanged(aCmp)
-  );
+): OperatorFunction<T, T[K]> => pipe(pluck(aKey), distinctUntilChanged(aCmp));
+
+/**
+ * Pushes a value to an array
+ *
+ * @param aValue - the value
+ * @param aArray - the array
+ * @returns the array
+ */
+export const arrayPush = <T>(aValue: T, aArray: T[]): T[] => {
+  aArray.push(aValue);
+  return aArray;
+};

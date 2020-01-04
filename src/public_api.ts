@@ -1,3 +1,4 @@
+export * from './backpressure';
 export * from './module';
 export * from './module.provider';
 export * from './provider';

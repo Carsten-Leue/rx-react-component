@@ -1,32 +1,28 @@
 Arguments: 
-  C:\Program Files\nodejs\node.exe C:\Program Files (x86)\Yarn\bin\yarn.js install
+  C:\Program Files\nodejs\node.exe c:\Program Files (x86)\Yarn\bin\yarn.js install
 
 PATH: 
-  C:\ProgramData\DockerDesktop\version-bin;C:\Program Files\Docker\Docker\Resources\bin;C:\Python37\Scripts\;C:\Python37\;C:\Python27\;C:\Python27\Scripts;C:\Program Files (x86)\Common Files\Oracle\Java\javapath;C:\Program Files (x86)\Windows Resource Kits\Tools\;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;C:\ProgramData\chocolatey\bin;C:\Program Files\Calibre2\;C:\Program Files\Intel\WiFi\bin\;C:\Program Files\Common Files\Intel\WirelessCommon\;C:\ProgramData\nvm;C:\Program Files\nodejs;C:\Program Files\Java\jdk1.8.0_191\bin;C:\Program Files\Java\jdk1.8.0_201\bin;C:\Program Files\Java\jdk-11.0.2\bin;C:\Program Files\NVIDIA Corporation\NVIDIA NvDLISR;C:\Users\cleue\AppData\Roaming\Python\Python37\Scripts;C:\Program Files\Java\jdk1.8.0_211\bin;C:\Program Files\OpenSSL\bin;C:\ProgramData\chocolatey\lib\maven\apache-maven-3.6.1\bin;C:\Program Files\nodejs\;C:\Program Files\Git\cmd;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;C:\Program Files (x86)\Intel\Intel(R) Management Engine Components\DAL;C:\Program Files\Intel\Intel(R) Management Engine Components\DAL;C:\Program Files\MiKTeX 2.9\miktex\bin\x64\;C:\Program Files (x86)\Yarn\bin\;C:\Program Files (x86)\Windows Kits\8.1\Windows Performance Toolkit\;C:\Users\cleue\AppData\Local\Microsoft\WindowsApps;C:\Users\cleue\AppData\Local\Programs\Microsoft VS Code\bin;C:\ProgramData\chocolatey\lib\msys2;C:\tools\msys64;C:\Program Files\Intel\WiFi\bin\;C:\Program Files\Common Files\Intel\WirelessCommon\;C:\Users\cleue\AppData\Local\Programs\Fiddler;C:\Users\cleue\AppData\Local\GitHubDesktop\bin;C:\Users\cleue\AppData\Local\Microsoft\WindowsApps;C:\Users\cleue\AppData\Roaming\npm;C:\Users\cleue\AppData\Local\Yarn\bin;C:\ProgramData\chocolatey\lib\mingw\tools\install\mingw64\bin;
+  C:\ProgramData\DockerDesktop\version-bin;C:\Program Files\Docker\Docker\Resources\bin;C:\Python38\Scripts\;C:\Python38\;C:\Program Files (x86)\Common Files\Oracle\Java\javapath;C:\Python27\;C:\Python27\Scripts;C:\windows\system32;C:\windows;C:\windows\System32\Wbem;C:\windows\System32\WindowsPowerShell\v1.0\;C:\windows\System32\OpenSSH\;C:\ProgramData\chocolatey\bin;C:\Program Files\Calibre2\;C:\ProgramData\nvm;C:\Program Files\nodejs;C:\Program Files\OpenSSL\bin;C:\Program Files\Microsoft VS Code\bin;C:\Program Files\Intel\WiFi\bin\;C:\Program Files\Common Files\Intel\WirelessCommon\;C:\Program Files (x86)\Intel\Intel(R) Management Engine Components\DAL;C:\Program Files\Intel\Intel(R) Management Engine Components\DAL;C:\Program Files (x86)\Webex\Webex\Applications;C:\Program Files\nodejs\;C:\Program Files\PowerShell\6\;C:\Program Files\ojdkbuild\java-13-openjdk-13.0.1-1\missioncontrol\;C:\Program Files\ojdkbuild\java-13-openjdk-13.0.1-1\bin;c:\Program Files (x86)\Yarn\bin\;C:\Program Files\Git\cmd;C:\ProgramData\chocolatey\lib\maven\apache-maven-3.6.3\bin;C:\Users\CarstenLeue\AppData\Local\Microsoft\WindowsApps;C:\ProgramData\chocolatey\lib\msys2;C:\tools\msys64;C:\Users\CarstenLeue\AppData\Local\GitHubDesktop\bin;C:\ProgramData\chocolatey\lib\mingw\tools\install\mingw64\bin;C:\Program Files\Intel\WiFi\bin\;C:\Program Files\Common Files\Intel\WirelessCommon\;C:\Users\CarstenLeue\AppData\Roaming\npm;C:\Users\CarstenLeue\Documents\vcpkg;C:\Users\CarstenLeue\AppData\Local\Yarn\bin
 
 Yarn version: 
-  1.19.0
+  1.21.1
 
 Node version: 
-  10.16.3
+  10.17.0
 
 Platform: 
   win32 x64
 
 Trace: 
-  Error: http://localhost:8081/nexus/content/repositories/acoustic/@angular%2fcompiler: socket hang up
-      at createHangUpError (_http_client.js:323:15)
-      at Socket.socketOnEnd (_http_client.js:426:23)
-      at Socket.emit (events.js:203:15)
-      at endReadableNT (_stream_readable.js:1145:12)
-      at process._tickCallback (internal/process/next_tick.js:63:19)
+  Error: getaddrinfo ENOTFOUND wats-repob.devlab.ibm.com wats-repob.devlab.ibm.com:80
+      at GetAddrInfoReqWrap.onlookup [as oncomplete] (dns.js:56:26)
 
 npm manifest: 
   {
     "name": "rx-react-component",
-    "version": "0.1.6",
+    "version": "0.2.3",
     "private": false,
-    "description": "Utility functions to express a React component using RXJS principles.",
+    "description": "Utility functions to express a React component using RxJS principles.",
     "keywords": [
       "observable",
       "react",
@@ -48,17 +44,36 @@ npm manifest:
     },
     "sideEffects": false,
     "scripts": {
-      "build": "ng-packagr -p package.json"
+      "build": "ng-packagr -p package.json",
+      "start": "start-storybook -p 9001 -c .storybook",
+      "test": "jest"
     },
     "dependencies": {},
     "devDependencies": {
-      "@angular/compiler": "^8.2.8",
-      "@angular/compiler-cli": "^8.2.8",
-      "@angular/core": "^8.2.8",
-      "@types/react": "^16.9.3",
-      "ng-packagr": "^5.5.1",
+      "@angular/compiler": "^8.2.14",
+      "@angular/compiler-cli": "^8.2.14",
+      "@angular/core": "^8.2.14",
+      "@babel/core": "^7.7.5",
+      "@storybook/addon-actions": "^5.2.8",
+      "@storybook/addon-console": "^1.2.1",
+      "@storybook/addon-info": "^5.2.8",
+      "@storybook/react": "^5.2.8",
+      "@testing-library/jest-dom": "^4.2.4",
+      "@testing-library/react": "^9.4.0",
+      "@types/jest": "^24.0.23",
+      "@types/node": "^12.12.18",
+      "@types/react": "^16.9.16",
+      "@types/react-dom": "^16.9.4",
+      "awesome-typescript-loader": "^5.2.1",
+      "babel-loader": "^8.0.6",
+      "jest": "^24.9.0",
+      "ng-packagr": "^5.7.1",
       "react": "^16.10.1",
+      "react-docgen-typescript-loader": "^3.6.0",
+      "react-docgen-typescript-webpack-plugin": "^1.1.0",
+      "react-dom": "^16.12.0",
       "rxjs": "^6.4.0",
+      "ts-jest": "^24.2.0",
       "tslib": "^1.10.0",
       "typescript": ">=3.4 <3.6",
       "zone.js": "~0.9.1"
