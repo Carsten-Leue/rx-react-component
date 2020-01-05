@@ -15,7 +15,7 @@ import {
   takeUntil
 } from 'rxjs/operators';
 
-import { bindNext, createSingleSubject } from './utils';
+import { bindNext, createSingleSubject } from '../utils';
 
 /**
  * Extension of an Observable that allows to access the current value. This

@@ -4,7 +4,7 @@ import { Observable, Subject, UnaryFunction } from 'rxjs';
 import { map, scan, startWith } from 'rxjs/operators';
 
 import { bindNext, rxComponent } from '../../public_api';
-import { ValueObservable } from '../../rx.component';
+import { ValueObservable } from '../../components/rx.component';
 
 export interface CounterProps {
   initial: number;

@@ -5,7 +5,7 @@ import { BaseProvider } from './base.provider';
 import { assertProvider } from './context';
 import { DynamicProvider } from './dynamic.provider';
 import { createReactProvider, ReactProvider } from './provider';
-import { DelegateComponent } from './rx.component';
+import { DelegateComponent } from '../components/rx.component';
 
 // prettier-ignore
 export interface InjectableReactProviderFactory {

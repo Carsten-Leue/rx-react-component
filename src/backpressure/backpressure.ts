@@ -10,7 +10,7 @@ import {
 } from 'rxjs';
 import { concatMap, filter, finalize, scan } from 'rxjs/operators';
 
-import { arrayPush } from './utils';
+import { arrayPush } from '../utils';
 
 const IDLE = Symbol();
 declare type IdleType = typeof IDLE;

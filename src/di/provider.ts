@@ -1,7 +1,7 @@
 import { Context, createElement, FC, ReactElement } from 'react';
 import { selectDisplayName } from './context';
 import { ReactModule, ReactModuleProps } from './module';
-import { DelegateComponent } from './rx.component';
+import { DelegateComponent } from '../components/rx.component';
 
 export type ReactModuleType = DelegateComponent<ReactModuleProps>;
 

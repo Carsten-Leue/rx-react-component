@@ -3,7 +3,7 @@ import { combineLatest, ObservableInput } from 'rxjs';
 import { distinctUntilChanged, map, switchMap } from 'rxjs/operators';
 
 import { BaseProvider, BaseProviderProps } from './base.provider';
-import { rxComponent, StateFunction } from './rx.component';
+import { rxComponent, StateFunction } from '../components/rx.component';
 
 export interface DynamicProviderProps {
   value: ObservableInput<any>;

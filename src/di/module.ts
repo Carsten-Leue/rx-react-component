@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 
-import { DelegateComponent } from './rx.component';
+import { DelegateComponent } from '../components/rx.component';
 
 export interface ReactModuleProps {
   children?: ReactNode;
