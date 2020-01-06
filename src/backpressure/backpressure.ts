@@ -9,7 +9,6 @@ import {
   UnaryFunction
 } from 'rxjs';
 import { concatMap, filter, finalize, scan } from 'rxjs/operators';
-
 import { arrayPush } from '../utils';
 
 const IDLE = Symbol();
@@ -38,7 +37,7 @@ function isBusy<R>(aValue: any): aValue is Observable<R> {
  * @param aDelegate - delegate function to produce the result based on a chunk
  * @returns an operator function that transforms a source sequence into a target sequence
  */
-export function rxBatch<T, R>(
+export function batch<T, R>(
   aDelegate: UnaryFunction<T[], Observable<R>>
 ): OperatorFunction<T, R> {
   // type safe helper

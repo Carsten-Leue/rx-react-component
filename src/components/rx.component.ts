@@ -75,7 +75,7 @@ function opState<P, S>(
 }
 
 function initComponent<P, S, DS>(
-  aStateFct: StateFunction<P, S>,
+  aStateFct: StateFunction<PropsWithChildren<P>, S>,
   aDelegate: DelegateComponent<S, DS>,
   aInitial: Readonly<P>,
   aCmp: Component<P, S>
@@ -142,7 +142,7 @@ function initComponent<P, S, DS>(
 }
 
 export function rxComponent<P, S, DS = any>(
-  aStateFct: StateFunction<P, S>,
+  aStateFct: StateFunction<PropsWithChildren<P>, S>,
   aDelegate: DelegateComponent<S, DS>
 ): ComponentClass<P, S> {
   return class extends Component<P, S> {
