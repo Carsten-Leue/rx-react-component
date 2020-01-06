@@ -99,6 +99,27 @@ const resolveRequiredDependency = (
 ) => assertProvider(useContext(aContext), aContext, aParent);
 
 /**
+ * Resolves the value by first resolving the dependencies, then calling the resolution function
+ *
+ * @param aFct  - the resolution function
+ * @param aCtx  - the context
+ * @param aReq  - the array of required dependencies
+ * @param aOpt  - the array of optional dependencies
+ *
+ * @returns the resolved value
+ */
+const resolveValue = <T, R>(
+  aFct: (req: any[], opt: any[]) => R,
+  aCtx: Context<T>,
+  aReq: Array<Context<any>> = [],
+  aOpt: Array<Context<any>> = []
+): R =>
+  aFct(
+    aReq.map(dep => resolveRequiredDependency(dep, aCtx)),
+    aOpt.map(resolveOptionalDependency)
+  );
+
+/**
  * Creates a provider from a statically provided value
  *
  * @param aFct  - the function that creates the value
@@ -111,14 +132,11 @@ const resolveRequiredDependency = (
 const createStaticProvider = <T>(
   aFct: (req: any[], opt: any[]) => T,
   aCtx: Context<T>,
-  aReq: Array<Context<any>> = [],
-  aOpt: Array<Context<any>> = []
+  aReq?: Array<Context<any>>,
+  aOpt?: Array<Context<any>>
 ): FC => ({ children }) => {
   // construct the value using hooks
-  const value = aFct(
-    aReq.map(dep => resolveRequiredDependency(dep, aCtx)),
-    aOpt.map(resolveOptionalDependency)
-  );
+  const value = resolveValue(aFct, aCtx, aReq, aOpt);
   // listen for the end of the lifecycle
   useEffect(() => () => unsubscribe(value), []);
   // provide the value
@@ -138,16 +156,11 @@ const createStaticProvider = <T>(
 const createDynamicProvider = <T>(
   aFct: (req: any[], opt: any[]) => ObservableInput<T>,
   aCtx: Context<T>,
-  aReq: Array<Context<any>> = [],
-  aOpt: Array<Context<any>> = []
+  aReq?: Array<Context<any>>,
+  aOpt?: Array<Context<any>>
 ): FC => ({ children }) => {
   // construct the value using hooks
-  const value$ = from(
-    aFct(
-      aReq.map(dep => resolveRequiredDependency(dep, aCtx)),
-      aOpt.map(resolveOptionalDependency)
-    )
-  );
+  const value$ = from(resolveValue(aFct, aCtx, aReq, aOpt));
   // use state to represent the value
   const [value, setValue] = useState<T>();
   // the observer
