@@ -1,9 +1,7 @@
 import { Context, createElement, FC, ReactElement } from 'react';
+
 import { selectDisplayName } from './context';
 import { ReactModule, ReactModuleProps } from './module';
-import { DelegateComponent } from '../components/rx.component';
-
-export type ReactModuleType = DelegateComponent<ReactModuleProps>;
 
 /**
  * Declares a react provider. The provider declares the provided
@@ -17,7 +15,7 @@ export interface ReactProvider<T> {
    * consumes the dependencies and the optional dependencies
    * and provides the specified context.
    */
-  module: ReactModuleType;
+  module: ReactModule;
   /**
    * Provided context
    */
@@ -43,7 +41,7 @@ export interface ReactProvider<T> {
  * @returns the provider instance
  */
 export function createReactProvider<T>(
-  module: ReactModuleType,
+  module: ReactModule,
   provides: Context<T>,
   dependencies?: Array<Context<any>>,
   optionalDependencies?: Array<Context<any>>
@@ -107,10 +105,10 @@ function createProviderModule(
 ): FC<ReactModuleProps> {
   // do not mutate
   const providers = [...aProviders];
-  const top = providers.shift()!;
+  const top = providers.shift();
   // construct the component tree
   return ({ children }) =>
-    providers.reduce(createModule, createElement(top.module, null, children));
+    providers.reduce(createModule, createElement(top!.module, null, children));
 }
 
 /**

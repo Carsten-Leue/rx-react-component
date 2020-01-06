@@ -1,11 +1,15 @@
-import { Context, createElement, FC } from 'react';
-import { identity, ObservableInput, UnaryFunction } from 'rxjs';
+import {
+  Context,
+  createElement,
+  FC,
+  useContext,
+  useEffect,
+  useState
+} from 'react';
+import { from, ObservableInput, Unsubscribable } from 'rxjs';
 
-import { BaseProvider } from './base.provider';
 import { assertProvider } from './context';
-import { DynamicProvider } from './dynamic.provider';
 import { createReactProvider, ReactProvider } from './provider';
-import { DelegateComponent } from '../components/rx.component';
 
 // prettier-ignore
 export interface InjectableReactProviderFactory {
@@ -70,118 +74,119 @@ export interface DynamicReactProviderFactory {
 }
 
 /**
- * Reducer that will create a new function with the result of consuming an additional dependency
+ * Tests if we have an unsubscribable object that requires teardown
  *
- * @param aCreator  - creator function of the next resolution level
- * @param aAssert   - function that asserts the existence of a dependency
- * @param aContext  - the context to consume as a dependency
- *
- * @return a component that consumes a dependency
+ * @param aValue - the value to check
+ * @returns true if the value is unsubscribable
  */
-const reduceDependency = (
-  aCreator: UnaryFunction<any[], DelegateComponent<any>>,
-  aAssert: (aValue: any, aCtx: Context<any>) => any,
-  aContext: Context<any>
-): UnaryFunction<any[], DelegateComponent<any>> => (aDeps: any[]) => props =>
-  createElement(aContext.Consumer, null, (ctx: any) =>
-    createElement(aCreator([aAssert(ctx, aContext), ...aDeps]), props)
-  );
-
-const reduceRequiredDependency = (
-  aCreator: UnaryFunction<any[], DelegateComponent<any>>,
-  aContext: Context<any>
-): UnaryFunction<any[], DelegateComponent<any>> =>
-  reduceDependency(
-    aCreator,
-    (value, ctx) => assertProvider(value, ctx, aContext),
-    aContext
-  );
-
-const reduceOptionalDependency = (
-  aCreator: UnaryFunction<any[], DelegateComponent<any>>,
-  aContext: Context<any>
-): UnaryFunction<any[], DelegateComponent<any>> =>
-  reduceDependency(aCreator, identity, aContext);
+const isUnsubscribable = (aValue: any): aValue is Unsubscribable =>
+  aValue && typeof aValue['unsubscribe'] === 'function';
 
 /**
- * Constructs the actual react provider for the value
+ * Safely unsubscribe the value
  *
- * @param ctx - the context to provide
- * @param value - the value to provide
- *
- * @returns the react provider
+ * @param aValue - the value in questions
  */
-const createProvider = <T>(ctx: Context<T>, value: T): FC => ({ children }) =>
-  createElement(BaseProvider, { ctx, value }, children);
+const unsubscribe = (aValue: any): any =>
+  isUnsubscribable(aValue) && aValue.unsubscribe();
+
+const resolveOptionalDependency = <T>(context: Context<T>) =>
+  useContext(context);
+
+const resolveRequiredDependency = (
+  aContext: Context<any>,
+  aParent: Context<any>
+) => assertProvider(useContext(aContext), aContext, aParent);
 
 /**
- * Constructs the actual react provider for the value
+ * Creates a provider from a statically provided value
  *
- * @param ctx - the context to provide
- * @param value - the value to provide
+ * @param aFct  - the function that creates the value
+ * @param aCtx  - the context to provide
+ * @param aReq  - the required dependencies
+ * @param aOpt  - the optional dependencies
  *
- * @returns the react provider
+ * @returns the functional component that provides the value
+ */
+const createStaticProvider = <T>(
+  aFct: (req: any[], opt: any[]) => T,
+  aCtx: Context<T>,
+  aReq: Array<Context<any>> = [],
+  aOpt: Array<Context<any>> = []
+): FC => ({ children }) => {
+  // construct the value using hooks
+  const value = aFct(
+    aReq.map(dep => resolveRequiredDependency(dep, aCtx)),
+    aOpt.map(resolveOptionalDependency)
+  );
+  // listen for the end of the lifecycle
+  useEffect(() => () => unsubscribe(value), []);
+  // provide the value
+  return createElement(aCtx.Provider, { value }, children);
+};
+
+/**
+ * Creates a provider from a dynamically provided value
+ *
+ * @param aFct  - the function that creates an observable of the value
+ * @param aCtx  - the context to provide
+ * @param aReq  - the required dependencies
+ * @param aOpt  - the optional dependencies
+ *
+ * @returns the functional component that provides the value
  */
 const createDynamicProvider = <T>(
-  ctx: Context<T>,
-  value: ObservableInput<T>
-): FC => ({ children }) =>
-  createElement(DynamicProvider, { ctx, value }, children);
-
-declare type ProviderFactory<T> = (aReq: any[], aOpt: any[]) => FC;
-
-/**
- * Simpler typing for implementation purposes
- */
-const genericCreateInjectableReactProvider = <T>(
-  fct: ProviderFactory<T>,
-  ctx: Context<T>,
-  req: Array<Context<any>> = [],
-  opt: Array<Context<any>> = []
-): ReactProvider<T> => {
-  // add optional dependencies
-  const optDependencies = (aReq: any[]) =>
-    opt.reduce(reduceOptionalDependency, (aOpt: any[]) => fct(aReq, aOpt));
-
-  // add required dependencies
-  const reqDependencies = req.reduce(reduceRequiredDependency, (aReq: any[]) =>
-    optDependencies(aReq)([])
+  aFct: (req: any[], opt: any[]) => ObservableInput<T>,
+  aCtx: Context<T>,
+  aReq: Array<Context<any>> = [],
+  aOpt: Array<Context<any>> = []
+): FC => ({ children }) => {
+  // construct the value using hooks
+  const value$ = from(
+    aFct(
+      aReq.map(dep => resolveRequiredDependency(dep, aCtx)),
+      aOpt.map(resolveOptionalDependency)
+    )
   );
-
-  // returns the provider
-  return createReactProvider(reqDependencies([]), ctx, req, opt);
+  // use state to represent the value
+  const [value, setValue] = useState<T>();
+  // the observer
+  const next = (aValue?: T) => setValue(prev => unsubscribe(prev) || aValue);
+  const error = () => next();
+  // listen for value changes
+  useEffect(() => {
+    // subscribe
+    const sub = value$.subscribe(next, error);
+    // done
+    return () => unsubscribe(sub) || unsubscribe(value);
+  }, []);
+  // provide the value
+  return value != null
+    ? createElement(aCtx.Provider, { value }, children)
+    : null;
 };
 
 /**
  * Simpler typing for implementation purposes
  */
 const internalCreateInjectableReactProvider = <T>(
-  fct: (aReq: any[], aOpt: any[]) => T,
+  fct: (req: any[], opt: any[]) => T,
   ctx: Context<T>,
   req: Array<Context<any>>,
   opt: Array<Context<any>>
 ): ReactProvider<T> =>
-  genericCreateInjectableReactProvider(
-    (aReq, aOpt) => createProvider(ctx, fct(aReq, aOpt)),
-    ctx,
-    req,
-    opt
-  );
+  createReactProvider(createStaticProvider(fct, ctx, req, opt), ctx, req, opt);
+
 /**
  * Simpler typing for implementation purposes
  */
 const internalCreateDynamicReactProvider = <T>(
-  fct: (aReq: any[], aOpt: any[]) => ObservableInput<T>,
+  fct: (req: any[], opt: any[]) => ObservableInput<T>,
   ctx: Context<T>,
   req: Array<Context<any>>,
   opt: Array<Context<any>>
 ): ReactProvider<T> =>
-  genericCreateInjectableReactProvider(
-    (aReq, aOpt) => createDynamicProvider(ctx, fct(aReq, aOpt)),
-    ctx,
-    req,
-    opt
-  );
+  createReactProvider(createDynamicProvider(fct, ctx, req, opt), ctx, req, opt);
 
 /**
  * Creates a `ReactProvider` that resolves its mandatory
