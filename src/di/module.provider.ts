@@ -21,9 +21,9 @@ export interface InjectableReactProviderFactory {
   <R1, R2, R3, T>(fct: (req: [R1, R2, R3], opt?: never) => T, ctx: Context<T>, req: [Context<R1>, Context<R2>, Context<R3>]):  ReactProvider<T>;
   <R1, R2, R3, R4, T>(fct: (req: [R1, R2, R3, R4], opt?: never) => T, ctx: Context<T>, req: [Context<R1>, Context<R2>, Context<R3>, Context<R4>]):  ReactProvider<T>;
   // only optional dependencies
-  <O1, T>(fct: (req: never, opt:[O1?]) => T, ctx: Context<T>, req: never, opt:[Context<O1>]):  ReactProvider<T>;
-  <O1, O2, T>(fct: (req: never, opt:[O1?, O2?]) => T, ctx: Context<T>, req: never, opt:[Context<O1>, Context<O2>]):  ReactProvider<T>;
-  <O1, O2, O3, T>(fct: (req: never, opt:[O1?, O2?, O3?]) => T, ctx: Context<T>, req: never, opt:[Context<O1>, Context<O2>, Context<O3>]):  ReactProvider<T>;
+  <O1, T>(fct: (req: never, opt:[O1?]) => T, ctx: Context<T>, req: void, opt:[Context<O1>]):  ReactProvider<T>;
+  <O1, O2, T>(fct: (req: never, opt:[O1?, O2?]) => T, ctx: Context<T>, req: void, opt:[Context<O1>, Context<O2>]):  ReactProvider<T>;
+  <O1, O2, O3, T>(fct: (req: never, opt:[O1?, O2?, O3?]) => T, ctx: Context<T>, req: void, opt:[Context<O1>, Context<O2>, Context<O3>]):  ReactProvider<T>;
   <O1, T>(fct: (req: [], opt:[O1?]) => T, ctx: Context<T>, req: [], opt:[Context<O1>]):  ReactProvider<T>;
   <O1, O2, T>(fct: (req: [], opt:[O1?, O2?]) => T, ctx: Context<T>, req: [], opt:[Context<O1>, Context<O2>]):  ReactProvider<T>;
   <O1, O2, O3, T>(fct: (req: [], opt:[O1?, O2?, O3?]) => T, ctx: Context<T>, req: [], opt:[Context<O1>, Context<O2>, Context<O3>]):  ReactProvider<T>;
@@ -52,9 +52,9 @@ export interface DynamicReactProviderFactory {
   <R1, R2, R3, T>(fct: (req: [R1, R2, R3], opt?: never) => ObservableInput<T>, ctx: Context<T>, req: [Context<R1>, Context<R2>, Context<R3>]):  ReactProvider<T>;
   <R1, R2, R3, R4, T>(fct: (req: [R1, R2, R3, R4], opt?: never) => ObservableInput<T>, ctx: Context<T>, req: [Context<R1>, Context<R2>, Context<R3>, Context<R4>]):  ReactProvider<T>;
   // only optional dependencies
-  <O1, T>(fct: (req: never, opt:[O1?]) => ObservableInput<T>, ctx: Context<T>, req: never, opt:[Context<O1>]):  ReactProvider<T>;
-  <O1, O2, T>(fct: (req: never, opt:[O1?, O2?]) => ObservableInput<T>, ctx: Context<T>, req: never, opt:[Context<O1>, Context<O2>]):  ReactProvider<T>;
-  <O1, O2, O3, T>(fct: (req: never, opt:[O1?, O2?, O3?]) => ObservableInput<T>, ctx: Context<T>, req: never, opt:[Context<O1>, Context<O2>, Context<O3>]):  ReactProvider<T>;
+  <O1, T>(fct: (req: never, opt:[O1?]) => ObservableInput<T>, ctx: Context<T>, req: void, opt:[Context<O1>]):  ReactProvider<T>;
+  <O1, O2, T>(fct: (req: never, opt:[O1?, O2?]) => ObservableInput<T>, ctx: Context<T>, req: void, opt:[Context<O1>, Context<O2>]):  ReactProvider<T>;
+  <O1, O2, O3, T>(fct: (req: never, opt:[O1?, O2?, O3?]) => ObservableInput<T>, ctx: Context<T>, req: void, opt:[Context<O1>, Context<O2>, Context<O3>]):  ReactProvider<T>;
   <O1, T>(fct: (req: [], opt:[O1?]) => ObservableInput<T>, ctx: Context<T>, req: [], opt:[Context<O1>]):  ReactProvider<T>;
   <O1, O2, T>(fct: (req: [], opt:[O1?, O2?]) => ObservableInput<T>, ctx: Context<T>, req: [], opt:[Context<O1>, Context<O2>]):  ReactProvider<T>;
   <O1, O2, O3, T>(fct: (req: [], opt:[O1?, O2?, O3?]) => ObservableInput<T>, ctx: Context<T>, req: [], opt:[Context<O1>, Context<O2>, Context<O3>]):  ReactProvider<T>;

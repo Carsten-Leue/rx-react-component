@@ -1,6 +1,6 @@
 import { Context, createElement, FC, ReactElement } from 'react';
+import { UnaryFunction } from 'rxjs';
 
-import { selectDisplayName } from './context';
 import { ReactModule, ReactModuleProps } from './module';
 
 /**
@@ -40,59 +40,66 @@ export interface ReactProvider<T> {
  *
  * @returns the provider instance
  */
-export function createReactProvider<T>(
+export const createReactProvider = <T>(
   module: ReactModule,
   provides: Context<T>,
   dependencies?: Array<Context<any>>,
   optionalDependencies?: Array<Context<any>>
-): ReactProvider<T> {
-  return { module, provides, dependencies, optionalDependencies };
-}
+): ReactProvider<T> => ({
+  module,
+  provides,
+  dependencies,
+  optionalDependencies
+});
 
-declare type Edges<K, V> = (aValue: V) => K[];
-declare type Value<K, V> = (aKey: K) => V;
+declare type Edges<K, V> = UnaryFunction<V, K[]>;
+declare type Value<K, V> = UnaryFunction<K, V[]>;
 
 function internalTopoSort<K, V>(
-  aDst: V[],
   aKey: K,
   aNodes: Value<K, V>,
   aEdges: Edges<K, V>,
   aCycle: Set<K>
-) {
+): V[] {
   // tests for cycles
   if (!aCycle.has(aKey)) {
     // register
     aCycle.add(aKey);
-    // get the outbound edges
-    const value = aNodes(aKey);
-    if (value != null) {
-      // get the edges
-      const edges = aEdges(value);
-      if (edges) {
-        // iterate
-        topoSort(aDst, edges, aNodes, aEdges, aCycle);
-      }
-      // register this node
-      aDst.push(value);
-    }
+    // locate the nodes
+    const nodes = aNodes(aKey);
+    return nodes.reduce(
+      (dst, node) => topoSort(dst, aEdges(node), aNodes, aEdges, aCycle),
+      nodes
+    );
   }
+  // nothing to return
+  return [];
 }
 
-function topoSort<K, V>(
+const topoSort = <K, V>(
   aDst: V[],
   aKeys: K[],
   aNodes: Value<K, V>,
   aEdges: Edges<K, V>,
   aCycle: Set<K>
-) {
-  // iterate over the keys
-  aKeys.forEach(aKey => internalTopoSort(aDst, aKey, aNodes, aEdges, aCycle));
-}
+): V[] =>
+  aKeys.reduce(
+    (dst, key) => internalTopoSort(key, aNodes, aEdges, aCycle).concat(dst),
+    aDst
+  );
 
-const createModule = (
+/**
+ * Creates a new module from a provider
+ *
+ * @param aChildren - the children
+ * @param aProvider - the  provider
+ *
+ * @returns the new element
+ */
+const reduceModule = (
   aChildren: ReactElement,
-  aProvider: ReactProvider<any>
-): ReactElement => createElement(aProvider.module, null, aChildren);
+  { module }: ReactProvider<any>
+) => createElement(module, null, aChildren);
 
 /**
  * Constructs a module from a topological list of providers
@@ -103,63 +110,12 @@ const createModule = (
 function createProviderModule(
   aProviders: Array<ReactProvider<any>>
 ): FC<ReactModuleProps> {
-  // do not mutate
-  const providers = [...aProviders];
-  const top = providers.shift();
+  // extract the start module and the providers
+  const [{ module }, ...providers] = aProviders;
   // construct the component tree
   return ({ children }) =>
-    providers.reduce(createModule, createElement(top!.module, null, children));
+    providers.reduce(reduceModule, createElement(module, null, children));
 }
-
-/**
- * Compares two strings
- *
- * @param aLeft  - left string
- * @param aRight - right string
- *
- * @returns result of the comparison
- */
-const cmpStrings = (aLeft?: string, aRight?: string) =>
-  aLeft === aRight
-    ? 0
-    : aLeft == null
-    ? -1
-    : aRight == null
-    ? +1
-    : aLeft.localeCompare(aRight);
-
-/**
- * Compare the contexts by display name
- *
- * @param aLeft  - left context
- * @param aRight - right context
- * @returns the comparison result
- */
-const compareByContext = (aLeft: Context<any>, aRight: Context<any>): number =>
-  cmpStrings(selectDisplayName(aLeft), selectDisplayName(aRight));
-
-/**
- * Compare the providers by display name
- *
- * @param aLeft  - left provider
- * @param aRight - right provider
- * @returns the comparison result
- */
-const compareByProvider = (
-  aLeft: ReactProvider<any>,
-  aRight: ReactProvider<any>
-): number => compareByContext(aLeft.provides, aRight.provides);
-
-/**
- * Sort the providers by display name of the contexts they provide, so we
- * produce a reproducible topological sort
- *
- * @param aProviders - the providers
- * @returns the sorted list
- */
-const createLexicalSort = (
-  aProviders: Set<ReactProvider<any>>
-): Array<ReactProvider<any>> => Array.from(aProviders).sort(compareByProvider);
 
 /**
  * Returns the outbound dependencies of a provider. The result
@@ -168,13 +124,32 @@ const createLexicalSort = (
  * @param aProvider - the provider
  * @returns the dependencies
  */
-function getEdges({
+const getEdges = ({
   dependencies = [],
   optionalDependencies = []
-}: ReactProvider<any>): Array<Context<any>> {
-  // merge
-  return [...dependencies, ...optionalDependencies].sort(compareByContext);
-}
+}: ReactProvider<any>): Array<Context<any>> => [
+  ...dependencies,
+  ...optionalDependencies
+];
+
+declare type ProviderMap = Map<Context<any>, Array<ReactProvider<any>>>;
+
+/**
+ * Registers a provider with the provider map
+ *
+ * @param aDst - target map
+ * @param aProvider - the provider to register
+ *
+ * @returns the map
+ */
+const addProvider = (
+  aDst: ProviderMap,
+  aProvider: ReactProvider<any>
+): ProviderMap => {
+  // the provider key
+  const { provides } = aProvider;
+  return aDst.set(provides, [...(aDst.get(provides) || []), aProvider]);
+};
 
 /**
  * Creates a topological sort of the providers
@@ -186,19 +161,17 @@ function createTopologicalOrder(
   aProviders: Array<ReactProvider<any>>
 ): Array<ReactProvider<any>> {
   // organize the providers as a map
-  const registry = aProviders.reduce<Map<Context<any>, ReactProvider<any>>>(
-    (aDst, aProvider) => aDst.set(aProvider.provides, aProvider),
-    new Map()
-  );
-  // get all entry nodes
-  const nodes = aProviders.map(aProvider => aProvider.provides);
+  const registry = aProviders.reduce(addProvider, new Map());
   // callback to get the provider from a key
   const getProvider = (aCtx: Context<any>) => registry.get(aCtx)!;
   // result
-  const result: Array<ReactProvider<any>> = [];
-  topoSort(result, nodes, getProvider, getEdges, new Set());
-  // ok
-  return result.reverse();
+  return topoSort(
+    [],
+    Array.from(registry.keys()),
+    getProvider,
+    getEdges,
+    new Set()
+  );
 }
 
 /**
@@ -209,8 +182,5 @@ function createTopologicalOrder(
  * @returns the component
  */
 export const createModuleFromProvider = (
-  aProviders: Array<ReactProvider<any>>
-): ReactModule =>
-  createProviderModule(
-    createTopologicalOrder(createLexicalSort(new Set(aProviders)))
-  );
+  aProviders: Array<ReactProvider<any>> = []
+): ReactModule => createProviderModule(createTopologicalOrder(aProviders));

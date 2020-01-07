@@ -1,5 +1,5 @@
 import { render } from '@testing-library/react';
-import React, { PureComponent } from 'react';
+import React from 'react';
 import { Observable } from 'rxjs';
 import { distinctUntilChanged, map, pluck, startWith } from 'rxjs/operators';
 
