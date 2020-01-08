@@ -1,4 +1,4 @@
-import { Context, createElement, FC, ReactNode } from 'react';
+import { Context, createElement, FC, ReactNode, ReactElement } from 'react';
 import { UnaryFunction } from 'rxjs';
 
 import { ReactModule, ReactModuleProps } from './module';
@@ -96,8 +96,10 @@ const topoSort = <K, V>(
  *
  * @returns the new element
  */
-const reduceModule = (aChildren: ReactNode, { module }: ReactProvider<any>) =>
-  createElement(module, null, aChildren);
+const reduceModule = (
+  aChildren: ReactNode,
+  { module }: ReactProvider<any>
+): ReactElement<any> => createElement(module, null, aChildren);
 
 /**
  * Constructs a module from a topological list of providers
@@ -105,14 +107,15 @@ const reduceModule = (aChildren: ReactNode, { module }: ReactProvider<any>) =>
  * @param aProviders - the topological list
  * @returns the component
  */
-function createProviderModule(
-  aProviders: Array<ReactProvider<any>>
-): FC<ReactModuleProps> {
+function createProviderModule(aProviders: Array<ReactProvider<any>>): FC<any> {
   // extract the start module and the providers
   const [root, ...providers] = aProviders;
   // construct the component tree
   return ({ children }) =>
-    providers.reduce(reduceModule, reduceModule(children, root));
+    providers.reduce<ReactElement<any>>(
+      reduceModule,
+      reduceModule(children, root)
+    );
 }
 
 /**
