@@ -1,7 +1,6 @@
-import { Context, createElement, FC, ReactNode, ReactElement } from 'react';
+import { Context, createElement, FC, ReactElement, ReactNode } from 'react';
 import { UnaryFunction } from 'rxjs';
-
-import { ReactModule, ReactModuleProps } from './module';
+import { ReactModule } from './module';
 
 /**
  * Declares a react provider. The provider declares the provided
@@ -49,13 +48,14 @@ export const createReactProvider = <T>(
   module,
   provides,
   dependencies,
-  optionalDependencies
+  optionalDependencies,
 });
 
 declare type Edges<K, V> = UnaryFunction<V, K[]>;
 declare type Value<K, V> = UnaryFunction<K, V[]>;
 
 function internalTopoSort<K, V>(
+  aDst: V[],
   aKey: K,
   aNodes: Value<K, V>,
   aEdges: Edges<K, V>,
@@ -67,13 +67,15 @@ function internalTopoSort<K, V>(
     aCycle.add(aKey);
     // locate the nodes
     const nodes = aNodes(aKey);
-    return nodes.reduce(
-      (dst, node) => topoSort(dst, aEdges(node), aNodes, aEdges, aCycle),
-      nodes
-    );
+    return nodes
+      .reduce(
+        (dst, node) => topoSort(dst, aEdges(node), aNodes, aEdges, aCycle),
+        aDst
+      )
+      .concat(nodes);
   }
   // nothing to return
-  return [];
+  return aDst;
 }
 
 const topoSort = <K, V>(
@@ -84,7 +86,7 @@ const topoSort = <K, V>(
   aCycle: Set<K>
 ): V[] =>
   aKeys.reduce(
-    (dst, key) => internalTopoSort(key, aNodes, aEdges, aCycle).concat(dst),
+    (dst, key) => internalTopoSort(dst, key, aNodes, aEdges, aCycle),
     aDst
   );
 
@@ -104,7 +106,7 @@ const reduceModule = (
 /**
  * Constructs a module from a topological list of providers
  *
- * @param aProviders - the topological list
+ * @param aProviders - the inverse topological list
  * @returns the component
  */
 function createProviderModule(aProviders: Array<ReactProvider<any>>): FC<any> {
@@ -127,10 +129,10 @@ function createProviderModule(aProviders: Array<ReactProvider<any>>): FC<any> {
  */
 const getEdges = ({
   dependencies = [],
-  optionalDependencies = []
+  optionalDependencies = [],
 }: ReactProvider<any>): Array<Context<any>> => [
   ...dependencies,
-  ...optionalDependencies
+  ...optionalDependencies,
 ];
 
 declare type ProviderMap = Map<Context<any>, Array<ReactProvider<any>>>;
@@ -184,4 +186,5 @@ function createTopologicalOrder(
  */
 export const createModuleFromProvider = (
   aProviders: Array<ReactProvider<any>> = []
-): ReactModule => createProviderModule(createTopologicalOrder(aProviders));
+): ReactModule =>
+  createProviderModule(createTopologicalOrder(aProviders).reverse());
